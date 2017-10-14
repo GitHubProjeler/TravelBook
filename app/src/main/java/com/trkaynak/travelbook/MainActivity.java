@@ -15,13 +15,13 @@ import android.widget.ListView;
 import com.google.android.gms.maps.model.LatLng;
 
 import java.util.ArrayList;
-import java.util.function.DoubleUnaryOperator;
+
 
 public class MainActivity extends AppCompatActivity {
 
    static ArrayList<String> names = new ArrayList<String>();
    static ArrayList<LatLng> location = new ArrayList<LatLng>();
-    ArrayAdapter arrayAdapter;
+   static ArrayAdapter arrayAdapter;
 
     @Override//menü tanımlaması yapılıyor
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
             //veritabanına ulaşılıyor
             MapsActivity.database = this.openOrCreateDatabase("Places",MODE_PRIVATE,null);
             //veriler çekiliyor
-            Cursor cursor =  MapsActivity.database.rawQuery("SELECT * FROM Places",null);
+            Cursor cursor =  MapsActivity.database.rawQuery("SELECT * FROM places",null);
             //indexlere ulaşılması için
             int nameIx = cursor.getColumnIndex("name");//name adındaki sütuna ulaşılıyor.
             int latitudeIx = cursor.getColumnIndex("latitude");//latitude sütuna ulaşılıyor
@@ -65,8 +65,8 @@ public class MainActivity extends AppCompatActivity {
             //
             while (cursor != null){//imleç boş bir yerde değilse döngüye giriyor.
                 String nameFromDatabase = cursor.getString(nameIx);//veritabanından gelen name aktarılıyor
-                String latitudeFromDatabase = cursor.getColumnName(latitudeIx);
-                String longitudeFromDatabase = cursor.getColumnName(longitudeIx);
+                String latitudeFromDatabase = cursor.getString(latitudeIx);
+                String longitudeFromDatabase = cursor.getString(longitudeIx);
 
                 //Arraylara ekleniyor.
                 names.add(nameFromDatabase);

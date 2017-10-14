@@ -94,13 +94,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             Intent intent = getIntent();
             String info = intent.getStringExtra("info");
 
-            if(info.equalsIgnoreCase("new")){//eğer yeni ise
+            if(info.equalsIgnoreCase("new")){//eğer yeni bir yer ise
                 mMap.clear();
                 Location lastLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
                 LatLng lastUserLocation = new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude());
                 mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(lastUserLocation,15));
 
-            }else{
+            }else{//eski bir yere bakılacaksa listviewden
                 mMap.clear();
                int position = intent.getIntExtra("position",0);
                 LatLng location = new LatLng(MainActivity.location.get(position).latitude,MainActivity.location.get(position).longitude);
@@ -119,11 +119,25 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         if(grantResults.length > 0){
             if (ContextCompat.checkSelfPermission(this,Manifest.permission.ACCESS_FINE_LOCATION)== PackageManager.PERMISSION_GRANTED){
                 locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,0,0,locationListener);//ilk defa izin verildi ise yeri öğretniliyor.
-                mMap.clear();
 
-                Location lastLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                LatLng lastUserLocation = new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude());
-                mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(lastUserLocation,15));
+                //kullanıcı ilk defe izin veriyor ise de Mainden geleni karşılanıyor
+                Intent intent = getIntent();
+                String info = intent.getStringExtra("info");
+
+                if(info.equalsIgnoreCase("new")){//eğer yeni bir yer ise
+                    mMap.clear();
+                    Location lastLocation = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                    LatLng lastUserLocation = new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude());
+                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(lastUserLocation,15));
+
+                }else{//eski bir yere bakılacaksa listviewden
+                    mMap.clear();
+                    int position = intent.getIntExtra("position",0);
+                    LatLng location = new LatLng(MainActivity.location.get(position).latitude,MainActivity.location.get(position).longitude);
+                    mMap.addMarker(new MarkerOptions().position(location).title(MainActivity.names.get(position)));
+                    mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location,15));
+
+                }
             }
         }
     }
@@ -150,6 +164,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             e.printStackTrace();
         }
         mMap.addMarker(new MarkerOptions().position(latLng).title(address));
+
+        //haritadan ekleme yapıldığından listenin güncellenmesi manuel olarak
+        MainActivity.names.add(address);
+        MainActivity.location.add(latLng);
+        MainActivity.arrayAdapter.notifyDataSetChanged();
+
         Toast.makeText(getApplicationContext(),"New Place Create",Toast.LENGTH_LONG).show();
 
         try {
@@ -164,7 +184,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             //veritabanı için tablolar oluşturuluyor.
             database.execSQL("CREATE TABLE IF NOT EXISTS places (name VARCHAR, latitude VARCHAR, longitude VARCHAR) ");
             //Veri kayıt etmek için. ne kayıt edileceği bilinmediği için ? işareti kullanılıyor
-            String toCompile = "INSERT INTO places (name, latitude,longitude) VALUES (?,?,?)";
+            String toCompile = "INSERT INTO places (name, latitude, longitude) VALUES (?,?,?)";
             //sql kodunu işleme almak için
             SQLiteStatement sqLiteStatement = database.compileStatement(toCompile);
             //Kayıt edilecek veriler
